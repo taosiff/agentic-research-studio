@@ -586,33 +586,6 @@ if d and "writer" in d:
     """, unsafe_allow_html=True)
 
     with results_area:
-        st.markdown('<div class="source-card-deck">', unsafe_allow_html=True)
-        st.markdown('<div class="section-label">🌐 Stage 1 & 2 Deliverables: Live Web Intelligence & Primary Sources</div>', unsafe_allow_html=True)
-        
-        urls_found = re.findall(r'https?://[^\s\)]+', d.get("search_raw", d.get("search", "")))[:6]
-        
-        if urls_found:
-            st.markdown('<div class="source-grid">', unsafe_allow_html=True)
-            for u in urls_found:
-                domain = u.split("/")[2] if len(u.split("/")) > 2 else u
-                st.markdown(f"""
-                <div class="source-pill-card">
-                    <a href="{u}" target="_blank" class="source-domain">🔗 {domain}</a>
-                    <div class="source-snippet">Verified intelligence reference acquired during web reconnaissance.</div>
-                </div>
-                """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        if d.get("scraped_url"):
-            st.markdown(f"""
-            <div class="primary-source-callout">
-                <strong>Primary Scraped Document:</strong> <code>{d.get('scraped_url')}</code><br>
-                <span style="font-size:0.75rem;color:#94a3b8;">Extracted full article text stripped of markup and boilerplate for deep factual synthesis.</span>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-
         st.markdown('<div class="report-container">', unsafe_allow_html=True)
         
         col_down, col_meta = st.columns([1.5, 4.5])
@@ -641,6 +614,33 @@ if d and "writer" in d:
             st.markdown('<div class="section-label">📊 Stage 4 Deliverable: Peer Review & Quality Audit Scorecard</div>', unsafe_allow_html=True)
             st.markdown(d["critic"])
             st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="source-card-deck">', unsafe_allow_html=True)
+        st.markdown('<div class="section-label">🌐 Verified Intelligence References & Primary Sources</div>', unsafe_allow_html=True)
+        
+        urls_found = re.findall(r'https?://[^\s\)]+', d.get("search_raw", d.get("search", "")))[:6]
+        
+        if urls_found:
+            st.markdown('<div class="source-grid">', unsafe_allow_html=True)
+            for u in urls_found:
+                domain = u.split("/")[2] if len(u.split("/")) > 2 else u
+                st.markdown(f"""
+                <div class="source-pill-card">
+                    <a href="{u}" target="_blank" class="source-domain">🔗 {domain}</a>
+                    <div class="source-snippet">Verified intelligence reference acquired during web reconnaissance.</div>
+                </div>
+                """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        if d.get("scraped_url"):
+            st.markdown(f"""
+            <div class="primary-source-callout">
+                <strong>Primary Scraped Document:</strong> <code>{d.get('scraped_url')}</code><br>
+                <span style="font-size:0.75rem;color:#94a3b8;">Extracted full article text stripped of markup and boilerplate for deep factual synthesis.</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        st.markdown('</div>', unsafe_allow_html=True)
 
 else:
     with results_area:
