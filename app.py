@@ -8,8 +8,8 @@ load_dotenv()
 
 from src.agents.agents import (
     get_groq_llm,
-    build_search_agent,
-    build_reader_agent,
+    execute_search_agent,
+    execute_reader_agent,
     build_writer_chain,
     build_critic_chain,
 )
@@ -28,7 +28,7 @@ st.markdown("""
 :root {
     --netflix-red: #E50914;
     --netflix-red-hover: #f40612;
-    --netflix-red-glow: rgba(229, 9, 20, 0.35);
+    --netflix-red-glow: rgba(229, 9, 20, 0.45);
     --bg-dark: #0f1016;
     --card-surface: #171822;
     --card-border: rgba(255, 255, 255, 0.08);
@@ -46,8 +46,8 @@ html, body, [class*="css"] {
 .stApp {
     background-color: var(--bg-dark);
     background-image: 
-        radial-gradient(circle at 50% 0%, rgba(229, 9, 20, 0.12) 0%, transparent 55%),
-        radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 0%, rgba(229, 9, 20, 0.14) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
         linear-gradient(180deg, #0b0c11 0%, #11131c 100%);
     background-attachment: fixed;
 }
@@ -85,7 +85,7 @@ html, body, [class*="css"] {
     padding: 0.2rem 0.6rem;
     border-radius: 6px;
     letter-spacing: -0.05em;
-    box-shadow: 0 0 15px var(--netflix-red-glow);
+    box-shadow: 0 0 18px var(--netflix-red-glow);
 }
 
 .nav-title {
@@ -105,8 +105,8 @@ html, body, [class*="css"] {
     display: flex;
     align-items: center;
     gap: 0.55rem;
-    background: rgba(229, 9, 20, 0.1);
-    border: 1px solid rgba(229, 9, 20, 0.3);
+    background: rgba(229, 9, 20, 0.12);
+    border: 1px solid rgba(229, 9, 20, 0.35);
     padding: 0.35rem 0.9rem;
     border-radius: 100px;
     font-family: 'JetBrains Mono', monospace;
@@ -121,13 +121,13 @@ html, body, [class*="css"] {
     height: 8px;
     border-radius: 50%;
     background: #ff4d58;
-    box-shadow: 0 0 10px #ff4d58;
+    box-shadow: 0 0 12px #ff4d58;
     animation: beacon 1.8s infinite;
 }
 
 @keyframes beacon {
     0%, 100% { opacity: 0.4; transform: scale(0.9); }
-    50% { opacity: 1; transform: scale(1.2); }
+    50% { opacity: 1; transform: scale(1.3); }
 }
 
 .hero-box {
@@ -220,8 +220,14 @@ html, body, [class*="css"] {
 
 .agent-card.running {
     border-color: var(--netflix-red);
-    background: linear-gradient(180deg, rgba(229, 9, 20, 0.08) 0%, #151622 100%);
-    box-shadow: 0 0 25px rgba(229, 9, 20, 0.2);
+    background: linear-gradient(180deg, rgba(229, 9, 20, 0.12) 0%, #151622 100%);
+    box-shadow: 0 0 30px rgba(229, 9, 20, 0.35);
+    animation: pulse-glow 2s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% { border-color: rgba(229, 9, 20, 0.4); }
+    100% { border-color: rgba(229, 9, 20, 0.9); }
 }
 
 .agent-card.completed {
@@ -270,15 +276,43 @@ html, body, [class*="css"] {
 }
 
 .agent-badge-active {
-    background: rgba(229, 9, 20, 0.2) !important;
+    background: rgba(229, 9, 20, 0.25) !important;
     color: #ff6b75 !important;
-    border: 1px solid rgba(229, 9, 20, 0.4);
+    border: 1px solid rgba(229, 9, 20, 0.5);
 }
 
 .agent-badge-done {
     background: rgba(16, 185, 129, 0.15) !important;
     color: #34d399 !important;
     border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.live-spinner-line {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.8rem;
+    background: rgba(229, 9, 20, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(229, 9, 20, 0.2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #ff6b75;
+}
+
+.radar-dots {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #ff4d58;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin-radar 0.8s linear infinite;
+}
+
+@keyframes spin-radar {
+    to { transform: rotate(360deg); }
 }
 
 .agent-thought-bubble {
@@ -380,6 +414,30 @@ html, body, [class*="css"] {
     text-align: center;
     padding: 2rem;
     background: rgba(18, 19, 28, 0.4);
+}
+
+.screen-working {
+    height: 480px;
+    border: 1px solid rgba(229, 9, 20, 0.4);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2.5rem;
+    background: linear-gradient(180deg, rgba(229, 9, 20, 0.08) 0%, rgba(18, 19, 28, 0.95) 100%);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.big-radar-pulse {
+    width: 64px;
+    height: 64px;
+    border: 3px solid rgba(229, 9, 20, 0.2);
+    border-top: 3px solid var(--netflix-red);
+    border-radius: 50%;
+    animation: spin-radar 1s linear infinite;
+    margin-bottom: 1.5rem;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -504,6 +562,21 @@ if st.session_state.is_running:
     groq_llm = get_groq_llm()
     data = {}
 
+    premiere_screen.markdown(f"""
+    <div class="screen-working">
+        <div class="big-radar-pulse"></div>
+        <div style="font-size:1.35rem;font-weight:700;color:#fff;margin-bottom:0.5rem;">
+            Autonomous Mesh Active
+        </div>
+        <div style="font-size:0.88rem;color:#ff6b75;font-family:'JetBrains Mono',monospace;margin-bottom:1rem;">
+            STAGE 1/4: Scouring web intelligence on Tavily...
+        </div>
+        <div style="font-size:0.82rem;color:#9ca3af;max-width:420px;line-height:1.5;">
+            Investigating: <span style="color:#ffffff;">"{topic_query}"</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     agent1_box.markdown(f"""
     <div class="agent-card running">
         <div class="agent-top-row">
@@ -511,23 +584,23 @@ if st.session_state.is_running:
                 <div class="agent-avatar">🛰️</div>
                 <div class="agent-name">Agent 01: Radar Searcher</div>
             </div>
-            <div class="agent-stage-badge agent-badge-active">● SEARCHING WEB</div>
+            <div class="agent-stage-badge agent-badge-active">● DISPATCHING TAVILY</div>
         </div>
         <div class="agent-thought-bubble">
             🧠 <b>Thinking:</b> Analyzing topic: "{topic_query}". Formulating high-signal search queries and dispatching Tavily live reconnaissance...
         </div>
+        <div class="live-spinner-line">
+            <div class="radar-dots"></div>
+            <span>Scanning live web index & ranking verified sources...</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
-    search_agent = build_search_agent(custom_llm=groq_llm)
-    search_res = search_agent.invoke({
-        "messages": [("user", f"Find recent, reliable and detailed information about: {topic_query}")]
-    })
+    search_data = execute_search_agent(topic_query, custom_llm=groq_llm)
+    data["search"] = search_data["summary"]
+    data["search_raw"] = search_data["raw"]
     
-    raw_search = search_res["messages"][-1].content
-    data["search"] = raw_search
-    
-    urls_found = re.findall(r'https?://[^\s\)]+', raw_search)[:4]
+    urls_found = re.findall(r'https?://[^\s\)]+', search_data["raw"])[:4]
     url_pills_html = "".join([f'<a href="{u}" target="_blank" class="url-pill">🔗 {u.split("/")[2]}</a>' for u in urls_found])
     
     agent1_box.markdown(f"""
@@ -540,9 +613,24 @@ if st.session_state.is_running:
             <div class="agent-stage-badge agent-badge-done">✔ DISCOVERY COMPLETE</div>
         </div>
         <div class="agent-thought-bubble">
-            ⚡ <b>Action:</b> Discovered {len(urls_found)} top verified web sources for deep inspection.
+            ⚡ <b>Action:</b> Discovered {len(urls_found)} verified intelligence sources via query: <i>"{search_data['query']}"</i>
         </div>
         <div style="margin-top:0.4rem;">{url_pills_html}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    premiere_screen.markdown(f"""
+    <div class="screen-working">
+        <div class="big-radar-pulse"></div>
+        <div style="font-size:1.35rem;font-weight:700;color:#fff;margin-bottom:0.5rem;">
+            Deep Content Reader Ingesting
+        </div>
+        <div style="font-size:0.88rem;color:#ff6b75;font-family:'JetBrains Mono',monospace;margin-bottom:1rem;">
+            STAGE 2/4: Scraping primary article & filtering noise...
+        </div>
+        <div style="font-size:0.82rem;color:#9ca3af;max-width:420px;line-height:1.5;">
+            Analyzing primary source citations...
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -553,26 +641,21 @@ if st.session_state.is_running:
                 <div class="agent-avatar">📖</div>
                 <div class="agent-name">Agent 02: Deep Content Reader</div>
             </div>
-            <div class="agent-stage-badge agent-badge-active">● SCRAPING SOURCE</div>
+            <div class="agent-stage-badge agent-badge-active">● SCRAPING ARTICLE</div>
         </div>
         <div class="agent-thought-bubble">
-            🧠 <b>Thinking:</b> Evaluating search discovery results. Selecting the most authoritative target URL and running Trafilatura multi-strategy scraper...
+            🧠 <b>Thinking:</b> Selecting the most authoritative target URL and running Trafilatura multi-strategy scraper...
+        </div>
+        <div class="live-spinner-line">
+            <div class="radar-dots"></div>
+            <span>Fetching full document & stripping boilerplate...</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    reader_agent = build_reader_agent(custom_llm=groq_llm)
-    reader_res = reader_agent.invoke({
-        "messages": [(
-            "user",
-            f"Based on the following search results about '{topic_query}', "
-            f"pick the most relevant URL and scrape it for deeper content.\n\n"
-            f"Search Results:\n{data['search'][:1200]}"
-        )]
-    })
-    
-    raw_scrape = reader_res["messages"][-1].content
-    data["reader"] = raw_scrape
+    reader_data = execute_reader_agent(topic_query, search_data["raw"], custom_llm=groq_llm)
+    data["reader"] = reader_data["content"]
+    data["scraped_url"] = reader_data["url"]
     
     agent2_box.markdown(f"""
     <div class="agent-card completed">
@@ -584,10 +667,25 @@ if st.session_state.is_running:
             <div class="agent-stage-badge agent-badge-done">✔ EXTRACTION COMPLETE</div>
         </div>
         <div class="agent-thought-bubble">
-            ⚡ <b>Action:</b> Extracted {len(raw_scrape)} characters of deep structured article content.
+            ⚡ <b>Action:</b> Extracted {len(reader_data['content'])} characters from <code>{reader_data['url'][:45]}...</code>
         </div>
         <div class="agent-content-preview">
-            {raw_scrape[:260]}...
+            {reader_data['content'][:260]}...
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    premiere_screen.markdown(f"""
+    <div class="screen-working">
+        <div class="big-radar-pulse"></div>
+        <div style="font-size:1.35rem;font-weight:700;color:#fff;margin-bottom:0.5rem;">
+            Lead Synthesis Author Active
+        </div>
+        <div style="font-size:0.88rem;color:#ff6b75;font-family:'JetBrains Mono',monospace;margin-bottom:1rem;">
+            STAGE 3/4: Groq LPU silicon formulating executive briefing...
+        </div>
+        <div style="font-size:0.82rem;color:#9ca3af;max-width:420px;line-height:1.5;">
+            Cross-referencing web discovery with deep scraped intelligence...
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -602,7 +700,11 @@ if st.session_state.is_running:
             <div class="agent-stage-badge agent-badge-active">● SYNTHESIZING REPORT</div>
         </div>
         <div class="agent-thought-bubble">
-            🧠 <b>Thinking:</b> Cross-referencing web discovery with deep scraped intelligence. Generating executive briefing on Groq LPU silicon...
+            🧠 <b>Thinking:</b> Generating structured executive briefing on Groq LPU silicon...
+        </div>
+        <div class="live-spinner-line">
+            <div class="radar-dots"></div>
+            <span>Formulating executive analysis, implications & outlook...</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -633,6 +735,21 @@ if st.session_state.is_running:
     </div>
     """, unsafe_allow_html=True)
 
+    premiere_screen.markdown(f"""
+    <div class="screen-working">
+        <div class="big-radar-pulse"></div>
+        <div style="font-size:1.35rem;font-weight:700;color:#fff;margin-bottom:0.5rem;">
+            Senior Auditor Auditing
+        </div>
+        <div style="font-size:0.88rem;color:#ff6b75;font-family:'JetBrains Mono',monospace;margin-bottom:1rem;">
+            STAGE 4/4: Evaluating factual rigor & generating scorecard...
+        </div>
+        <div style="font-size:0.82rem;color:#9ca3af;max-width:420px;line-height:1.5;">
+            Executing adversarial peer review...
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     agent4_box.markdown(f"""
     <div class="agent-card running">
         <div class="agent-top-row">
@@ -644,6 +761,10 @@ if st.session_state.is_running:
         </div>
         <div class="agent-thought-bubble">
             🧠 <b>Thinking:</b> Performing adversarial review. Checking factual rigor, citations, coverage, and computing overall scorecard...
+        </div>
+        <div class="live-spinner-line">
+            <div class="radar-dots"></div>
+            <span>Scoring publication readiness & verifying citations...</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -676,7 +797,7 @@ if st.session_state.is_running:
 d = st.session_state.pipeline_data
 
 if d and "writer" in d:
-    urls_found = re.findall(r'https?://[^\s\)]+', d.get("search", ""))[:4]
+    urls_found = re.findall(r'https?://[^\s\)]+', d.get("search_raw", d.get("search", "")))[:4]
     url_pills_html = "".join([f'<a href="{u}" target="_blank" class="url-pill">🔗 {u.split("/")[2]}</a>' for u in urls_found])
     agent1_box.markdown(f"""
     <div class="agent-card completed">
@@ -695,6 +816,8 @@ if d and "writer" in d:
     """, unsafe_allow_html=True)
 
     raw_scrape = d.get("reader", "")
+    scraped_url = d.get("scraped_url", "")
+    url_tag = f"from <code>{scraped_url[:40]}...</code>" if scraped_url else ""
     agent2_box.markdown(f"""
     <div class="agent-card completed">
         <div class="agent-top-row">
@@ -705,7 +828,7 @@ if d and "writer" in d:
             <div class="agent-stage-badge agent-badge-done">✔ EXTRACTION COMPLETE</div>
         </div>
         <div class="agent-thought-bubble">
-            ⚡ <b>Action:</b> Scraped deep article payload ({len(raw_scrape)} characters).
+            ⚡ <b>Action:</b> Scraped deep article payload ({len(raw_scrape)} characters) {url_tag}.
         </div>
         <div class="agent-content-preview">
             {raw_scrape[:260]}...
