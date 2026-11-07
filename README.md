@@ -5,11 +5,18 @@
 </p>
 
 <p align="center">
+  <a href="https://agentic-research-studio.onrender.com/" target="_blank">
+    <img src="https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo">
+  </a>
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/Groq-LPU%20Accelerated-E50914?style=for-the-badge&logo=groq&logoColor=white" alt="Groq">
   <img src="https://img.shields.io/badge/LangChain-Framework-black?style=for-the-badge&logo=langchain&logoColor=white" alt="LangChain">
   <img src="https://img.shields.io/badge/Streamlit-Cinematic%20UI-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
+</p>
+
+<p align="center">
+  🚀 <strong>Live Demo:</strong> <a href="https://agentic-research-studio.onrender.com/"><strong>https://agentic-research-studio.onrender.com/</strong></a>
 </p>
 
 ---
